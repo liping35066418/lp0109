@@ -11,7 +11,7 @@ export default function CalcPanel() {
   const setCalcInput = usePriceBoardStore((s) => s.setCalcInput);
 
   const result = calculateTotal(modules, template, calcInput);
-  const discountOverLimit = calcInput.discountAmount > result.originalTotal;
+  const discountOverLimit = calcInput.discountAmount > result.afterMemberTotal;
 
   const updateVenueSelection = (itemId: string, updates: Partial<{ selected: boolean; quantity: number; hours: number }>) => {
     const current = calcInput.venueSelections[itemId] || { selected: false, quantity: 1, hours: calcInput.playHours };
@@ -260,9 +260,54 @@ export default function CalcPanel() {
           {discountOverLimit && (
             <div className="mt-2 p-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
               <AlertCircle size={14} />
-              优惠金额已自动限制为不超过原价 ¥{result.originalTotal}
+              优惠金额已自动限制为不超过折后金额 ¥{result.afterMemberTotal.toFixed(2)}
             </div>
           )}
+
+          <div className="mt-4 pt-4 border-t border-indigo-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-rose-700 flex items-center gap-2">
+                💎 会员折扣
+              </h4>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={calcInput.memberEnabled}
+                  onChange={(e) => setCalcInput({ memberEnabled: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-rose-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                <span className="ml-2 text-xs font-semibold text-slate-700">
+                  {calcInput.memberEnabled ? '已开启' : '已关闭'}
+                </span>
+              </label>
+            </div>
+            {calcInput.memberEnabled && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-slate-600 font-semibold">
+                    折扣率：<span className="text-rose-600 font-black">{Math.round(calcInput.memberDiscountRate * 10)}折</span>
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    (1折 ~ 7折)
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="0.7"
+                  step="0.1"
+                  value={calcInput.memberDiscountRate}
+                  onChange={(e) => setCalcInput({ memberDiscountRate: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500">
+                  <span>1折</span>
+                  <span>7折</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {renderSelectionSection('🏟️ 场地体验', null, 'venue', 'text-blue-700')}
@@ -289,6 +334,12 @@ export default function CalcPanel() {
             <span className="text-slate-600">订单原价</span>
             <span className="font-bold text-slate-800">¥{result.originalTotal.toFixed(2)}</span>
           </div>
+          {result.memberEnabled && result.memberDiscount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-rose-600">💎 会员折扣</span>
+              <span className="font-bold text-rose-600">-¥{result.memberDiscount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-purple-600">优惠抵扣</span>
             <span className="font-bold text-purple-600">-¥{result.discount.toFixed(2)}</span>
@@ -305,7 +356,7 @@ export default function CalcPanel() {
             <div className="text-right text-xs opacity-80">
               <div>{template === 'weekend' ? '🌙 周末价' : '☀️ 平日价'}</div>
               <div className="mt-1">
-                已优惠 ¥{result.discount.toFixed(2)}
+                已优惠 ¥{(result.memberDiscount + result.discount).toFixed(2)}
               </div>
             </div>
           </div>

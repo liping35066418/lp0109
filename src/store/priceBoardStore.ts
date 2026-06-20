@@ -80,6 +80,8 @@ const createDefaultCalcInput = (): CalculationInput => ({
   packageSelections: {},
   playHours: 2,
   discountAmount: 0,
+  memberEnabled: false,
+  memberDiscountRate: 0.9,
 });
 
 const PAGES_STORAGE_KEY = 'priceBoardPages';
@@ -120,12 +122,20 @@ export const usePriceBoardStore = create<PriceBoardState>((set, get) => ({
   selectedModuleId: null,
   setPageId: (id) => {
     const saved = loadFromStorage(id);
+    const defaultCalc = createDefaultCalcInput();
     if (saved) {
+      const savedCalcInput = (saved.calcInput || {}) as Partial<CalculationInput>;
+      const mergedCalcInput = {
+        ...defaultCalc,
+        ...savedCalcInput,
+        memberEnabled: savedCalcInput.memberEnabled !== undefined ? savedCalcInput.memberEnabled : false,
+        memberDiscountRate: savedCalcInput.memberDiscountRate !== undefined ? savedCalcInput.memberDiscountRate : 0.9,
+      };
       set({
         pageId: id,
         template: saved.template || 'weekday',
         modules: saved.modules || createDefaultModules(),
-        calcInput: saved.calcInput || createDefaultCalcInput(),
+        calcInput: mergedCalcInput,
         selectedModuleId: null,
       });
     } else {
@@ -133,7 +143,7 @@ export const usePriceBoardStore = create<PriceBoardState>((set, get) => ({
           pageId: id,
           template: 'weekday',
           modules: createDefaultModules(),
-          calcInput: createDefaultCalcInput(),
+          calcInput: defaultCalc,
           selectedModuleId: null,
       });
     }
@@ -263,16 +273,29 @@ export const calculateTotal = (
   });
 
   const originalTotal = venueTotal + equipmentTotal + packageTotal;
-  const discount = Math.min(input.discountAmount, originalTotal);
-  const finalTotal = Math.max(0, originalTotal - discount);
+
+  let memberDiscount = 0;
+  let afterMemberTotal = originalTotal;
+  if (input.memberEnabled) {
+    const discountRate = Math.max(0.1, Math.min(0.7, input.memberDiscountRate));
+    afterMemberTotal = originalTotal * discountRate;
+    memberDiscount = originalTotal - afterMemberTotal;
+  }
+
+  const discount = Math.min(input.discountAmount, afterMemberTotal);
+  const finalTotal = Math.max(0, afterMemberTotal - discount);
 
   return {
     venueTotal,
     equipmentTotal,
     packageTotal,
     originalTotal,
+    memberDiscount,
+    afterMemberTotal,
     discount,
     finalTotal,
     isWeekend,
+    memberEnabled: input.memberEnabled,
+    memberDiscountRate: input.memberDiscountRate,
   };
 };

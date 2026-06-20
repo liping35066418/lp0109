@@ -31,6 +31,8 @@ export interface CalculationInput {
   packageSelections: Record<string, { selected: boolean; quantity: number; people: number }>;
   playHours: number;
   discountAmount: number;
+  memberEnabled: boolean;
+  memberDiscountRate: number;
 }
 
 export interface PageState {

@@ -6,8 +6,13 @@ import ConfigPanel from '@/components/ConfigPanel';
 import CalcPanel from '@/components/CalcPanel';
 import { Layout, Layers, Coins } from 'lucide-react';
 
-export default function PriceBoardEditor() {
-  const { pageId } = useParams<{ pageId: string }>();
+interface PriceBoardEditorProps {
+  pageId?: string;
+}
+
+export default function PriceBoardEditor({ pageId: propsPageId }: PriceBoardEditorProps) {
+  const { pageId: routePageId } = useParams<{ pageId: string }>();
+  const pageId = propsPageId || routePageId || '8879';
   const setPageId = usePriceBoardStore((s) => s.setPageId);
   const currentPageId = usePriceBoardStore((s) => s.pageId);
   const template = usePriceBoardStore((s) => s.template);
@@ -43,8 +48,8 @@ export default function PriceBoardEditor() {
               #{pageId}
             </span>
             <span className="text-xs text-slate-500 mx-1">|</span>
-            <Link
-              to="/page/8879"
+            <a
+              href="#/page/8879"
               className={`text-xs px-2 py-0.5 rounded-md transition-all ${
                 pageId === '8879'
                   ? 'bg-blue-600 text-white font-bold'
@@ -52,9 +57,9 @@ export default function PriceBoardEditor() {
               }`}
             >
               8879
-            </Link>
-            <Link
-              to="/page/3871"
+            </a>
+            <a
+              href="#/page/3871"
               className={`text-xs px-2 py-0.5 rounded-md transition-all ${
                 pageId === '3871'
                   ? 'bg-blue-600 text-white font-bold'
@@ -62,7 +67,7 @@ export default function PriceBoardEditor() {
               }`}
             >
               3871
-            </Link>
+            </a>
           </div>
         </div>
 

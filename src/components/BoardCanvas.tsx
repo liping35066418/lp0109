@@ -1,12 +1,15 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/types/priceBoard';
-import { usePriceBoardStore } from '@/store/priceBoardStore';
+import { usePriceBoardStore, calculateTotal } from '@/store/priceBoardStore';
 import DraggableModule from './DraggableModule';
 
 export default function BoardCanvas() {
   const modules = usePriceBoardStore((s) => s.modules);
   const template = usePriceBoardStore((s) => s.template);
   const pageId = usePriceBoardStore((s) => s.pageId);
+  const calcInput = usePriceBoardStore((s) => s.calcInput);
   const setSelectedModule = usePriceBoardStore((s) => s.setSelectedModule);
+
+  const result = calculateTotal(modules, template, calcInput);
 
   const bgGradient =
     template === 'weekend'
@@ -58,6 +61,27 @@ export default function BoardCanvas() {
                   {dateLabel}
                 </div>
                 <div className="h-px w-20" style={{ backgroundColor: accentColor }} />
+              </div>
+
+              <div className="mt-6 px-8 py-4 rounded-2xl" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                <div className="text-sm opacity-70 mb-1" style={{ color: '#ffffff' }}>
+                  📊 实时应付总价
+                </div>
+                <div className="text-6xl font-black tracking-tight" style={{ color: accentColor, textShadow: `0 0 30px ${accentColor}66` }}>
+                  ¥{result.finalTotal.toFixed(2)}
+                </div>
+                <div className="mt-2 flex justify-center gap-4 text-xs">
+                  {result.memberEnabled && result.memberDiscount > 0 && (
+                    <span className="px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(244,63,94,0.2)', color: '#fda4af' }}>
+                      💎 会员已省 ¥{result.memberDiscount.toFixed(2)}
+                    </span>
+                  )}
+                  {result.discount > 0 && (
+                    <span className="px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(168,85,247,0.2)', color: '#d8b4fe' }}>
+                      🎁 优惠已减 ¥{result.discount.toFixed(2)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex-1 relative">
