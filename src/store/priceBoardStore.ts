@@ -113,7 +113,7 @@ const loadFromStorage = (pageId: string): Partial<PriceBoardState> | null => {
   };
 
 export const usePriceBoardStore = create<PriceBoardState>((set, get) => ({
-  pageId: '8879',
+  pageId: '',
   template: 'weekday',
   modules: createDefaultModules(),
   calcInput: createDefaultCalcInput(),
@@ -240,7 +240,7 @@ export const calculateTotal = (
         const sel = input.venueSelections[item.id];
         if (sel?.selected) {
           const price = item.basePrice + (isWeekend ? item.weekendExtra : 0);
-          venueTotal += price * (sel.quantity || 1) * input.playHours;
+          venueTotal += price * (sel.quantity || 1) * (sel.hours || input.playHours);
         }
       });
     } else if (mod.type === 'equipment') {
@@ -256,7 +256,7 @@ export const calculateTotal = (
         const sel = input.packageSelections[item.id];
         if (sel?.selected) {
           const price = item.basePrice + (isWeekend ? item.weekendExtra : 0);
-          packageTotal += price * (sel.quantity || 1);
+          packageTotal += price * (sel.quantity || 1) * (sel.people || 1);
         }
       });
     }
